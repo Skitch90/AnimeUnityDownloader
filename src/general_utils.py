@@ -22,6 +22,8 @@ import urllib3
 from brotli import error as BrotliError  # noqa: N812
 from bs4 import BeautifulSoup
 from cloudscraper import CloudScraper
+from requests.cookies import RequestsCookieJar
+from requests.structures import CaseInsensitiveDict
 
 from .config import (
     DEFAULT_HEADERS,
@@ -56,7 +58,8 @@ def prepare_cloudscraper_session() -> CloudScraper:
     return scraper
 
 
-def fetch_page_cloudflare(url: str, timeout: int = 10) -> BeautifulSoup:
+def fetch_page_cloudflare(url: str, timeout: int = 10) -> dict[
+    str, BeautifulSoup | CaseInsensitiveDict[str] | RequestsCookieJar]:
     """Fetch HTML content from a Cloudflare-protected webpage using cloudscraper."""
     # Add random delay to avoid bot detection
     add_random_delay()
@@ -89,7 +92,11 @@ def fetch_page_cloudflare(url: str, timeout: int = 10) -> BeautifulSoup:
         raise
 
     # Parse and return the HTML
-    return BeautifulSoup(response.text, "html.parser")
+    return {
+        'page': BeautifulSoup(response.text, "html.parser"),
+        'headers': response.headers,
+        'cookies': response.cookies
+    }
 
 
 def decompress_response(response: requests.Response) -> str:
@@ -115,7 +122,11 @@ def decompress_response(response: requests.Response) -> str:
     return response.text
 
 
-def fetch_page(url: str, timeout: int = 10) -> BeautifulSoup:
+def fetch_page(url: str, timeout: int = 10) -> BeautifulSoup | CaseInsensitiveDict[str] | None:
+    return fetch_page_and_headers(url, timeout).get("page")
+
+def fetch_page_and_headers(url: str, timeout: int = 10) -> dict[
+    str, BeautifulSoup | CaseInsensitiveDict[str] | RequestsCookieJar]:
     """Fetch the HTML content of a webpage with better bot detection avoidance."""
     # Add random delay to avoid bot detection
     add_random_delay()
@@ -143,8 +154,11 @@ def fetch_page(url: str, timeout: int = 10) -> BeautifulSoup:
         ):
             text_content = decompress_response(response)
 
-        return BeautifulSoup(text_content, "html.parser")
-
+        return {
+            'page': BeautifulSoup(text_content, "html.parser"),
+            'headers': response.headers,
+            'cookies': response.cookies
+        }
     except requests.RequestException as req_err:
         if (
             hasattr(req_err, "response")
