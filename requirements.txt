@@ -1,5 +1,5 @@
 beautifulsoup4==4.14.3
-Brotli==1.1.0
+brotli==1.1.0
 cloudscraper==1.2.71
 fake_useragent==2.2.0
 httpx==0.28.1
