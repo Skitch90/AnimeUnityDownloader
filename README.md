@@ -152,3 +152,9 @@ python3 main.py --custom-path <custom_path>
 ```bash
 python3 main.py --custom-path /path/to/external/drive
 ```
+
+### Example alias
+
+```bash
+alias anime_download='python ~/projects/AnimeUnityDownloader/download_anime_episodes.py'
+```
