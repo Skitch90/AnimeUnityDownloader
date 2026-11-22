@@ -100,7 +100,7 @@ async def process_anime_download(
     download_anime(anime_name, video_urls, download_path)
 
 
-def parse_episodes_list(episodes_raw: list[str] | None) -> list[int] | None:
+def parse_episodes_list(episodes_raw: list[str] | None, max_value: int = 0) -> list[int] | None:
     """Parse episode tokens into a sorted list of ints.
 
     Accepts tokens like ['1,3,7,12'] or ['1,', '3,', '7', '12'] or ['1', '3', '7'].
@@ -109,9 +109,21 @@ def parse_episodes_list(episodes_raw: list[str] | None) -> list[int] | None:
         return None
 
     merged = ",".join(episodes_raw)
-    return sorted(
-        int(episode.strip()) for episode in merged.split(",") if episode.strip()
-    )
+    output = []
+    for episode in merged.split(","):
+        if episode.__contains__("-"):
+            first, second = episode.split("-")
+            first_elem = 1
+            if first != "":
+                first_elem = int(first)
+            max_elem = max_value
+            if second != "":
+                max_elem = min(int(second), max_value)
+            output += range(first_elem, max_elem + 1)
+        elif episode:
+            output.append(int(episode))
+
+    return sorted(output)
 
 
 async def main() -> None:
